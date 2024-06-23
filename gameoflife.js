@@ -56,6 +56,9 @@ class Game {
     constructor(initHeight, initWidth, initDensity, rules = new GameRules()) {
         this.rules = rules;
         this.board = new Set();
+        // randomly filling in the board with alive and dead cells
+        // `true` represents an alive cell
+        // `false` represents a dead cell
         for (let i = 0; i < initHeight; ++i) {
             for (let j = 0; j < initWidth; ++j) {
                 if (Math.random() < initDensity) {
@@ -69,6 +72,9 @@ class Game {
         this.maxWidth = initWidth;
     }
 
+    /**
+     * String representation of the board
+     */
     toString() {
         let board = "";
         for (let i = this.minHeight; i < this.maxHeight; ++i) {
@@ -80,7 +86,15 @@ class Game {
         return board;
     }
 
+    /**
+     * Update the game board to the next state
+     */
     nextState() {
+        /**
+         * Let `table[minHeight - 1 .. maxHeight][minWidth - 1 .. maxWidth]`,
+         * where `table[row][col] == this.board.has(row + "," + col)`,
+         * then `countNeighbors(row, col)` == number of live cells neighboring `table[row][col]`
+         */
         const countNeighbors = (row, col) => {
             let neighborCount = 0;
             for (let i = row - 1; i <= row + 1; ++i) {
