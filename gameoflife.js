@@ -149,7 +149,20 @@ class Game {
     }
 }
 
-window.addEventListener("load", () => {
-    g = new Game(100, 100, 0.5);
-    g.playGame(500);
-})
+/**
+ * Load a `Game` from URL parameters
+ */
+function playFromParams() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const initHeight = urlParams.get("height") ? +urlParams.get("height") : 100;
+    const initWidth = urlParams.get("width") ? +urlParams.get("width") : 100;
+    const initDensity = urlParams.get("density") ? +urlParams.get("density") : 0.5;
+    const delay = urlParams.get("delay") ? +urlParams.get("delay") : 500;
+    window.addEventListener("load", () => {
+        g = new Game(initHeight, initWidth, initDensity);
+        g.playGame(delay);
+    });
+}
+
+playFromParams();
