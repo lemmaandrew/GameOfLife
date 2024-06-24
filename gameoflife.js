@@ -89,12 +89,7 @@ class Game {
     /**
      * Update the game board to the next state
      */
-    nextState() {
-        /**
-         * Let `table[minHeight - 1 .. maxHeight][minWidth - 1 .. maxWidth]`,
-         * where `table[row][col] == this.board.has(row + "," + col)`,
-         * then `countNeighbors(row, col)` == number of live cells neighboring `table[row][col]`
-         */
+    fastNextState() {
         const countNeighbors = (row, col) => {
             let neighborCount = 0;
             for (let i = row - 1; i <= row + 1; ++i) {
@@ -107,44 +102,63 @@ class Game {
             return neighborCount;
         }
 
-        let newBoard = new Set();
-        let newMinHeight = this.minHeight;
-        let newMinWidth = this.minWidth;
-        let newMaxHeight = this.maxHeight;
-        let newMaxWidth = this.maxWidth;
-        for (let row = this.minHeight - 1; row <= this.maxHeight; ++row) {
-            for (let col = this.minWidth - 1; col <= this.maxWidth; ++col) {
-                let numNeighbors = countNeighbors(row, col);
-                let isAlive = this.board.has(row + "," + col);
-                let shouldLive = this.rules.shouldLive(isAlive, numNeighbors);
-                if (shouldLive) {
-                    newBoard.add(row + "," + col);
-                    if (row < this.minHeight) {
-                        newMinHeight = row;
-                    } else if (row == this.maxHeight) {
-                        newMaxHeight = row + 1;
-                    }
-                    if (col < this.minWidth) {
-                        newMinWidth = col;
-                    } else if (col == this.maxWidth) {
-                        newMaxWidth = col + 1;
+        const updateBoardBoundaries = (row, col) => {
+            if (row < this.minHeight) {
+                this.minHeight = row;
+            } else if (row == this.maxHeight) {
+                this.maxHeight = row + 1;
+            }
+            if (col < this.minWidth) {
+                this.minWidth = col;
+            } else if (col == this.maxWidth) {
+                this.maxWitdh = col + 1;
+            }
+        }
+
+        const dfs = (row, col, visited, newBoard) => {
+            if (visited.has(row + "," + col)) {
+                return;
+            }
+            visited.add(row + "," + col);
+            // if a cell is dead then we don't check its neighbors
+            // because dead cells are only ever checked if they are the border of an "island" of alive cells
+            if (!this.board.has(row + "," + col) && this.rules.shouldLive(false, countNeighbors(row, col))) {
+                newBoard.add(row + "," + col);
+                updateBoardBoundaries(row, col);
+                return;
+            }
+            for (let i = row - 1; i <= row + 1; ++i) {
+                for (let j = col - 1; j <= col + 1; ++j) {
+                    let isAlive = this.board.has(i + "," + j);
+                    let numNeighbors = countNeighbors(i, j);
+                    let shouldLive = this.rules.shouldLive(isAlive, numNeighbors);
+                    if (shouldLive) {
+                        newBoard.add(i + "," + j);
+                        updateBoardBoundaries(i, j);
+                        if (!(i == row && j == col)) {
+                            dfs(i, j, visited, newBoard);
+                        }
                     }
                 }
             }
         }
 
+        let visited = new Set();
+        let newBoard = new Set();
+        for (let loc of this.board) {
+            const rowCol = loc.split(",");
+            const row = +rowCol[0];
+            const col = +rowCol[1];
+            dfs(row, col, visited, newBoard);
+        }
         this.board = newBoard;
-        this.minHeight = newMinHeight;
-        this.minWidth = newMinWidth;
-        this.maxHeight = newMaxHeight;
-        this.maxWidth = newMaxWidth;
     }
 
     async playGame(delay) {
         while (true) {
             document.getElementById("gameSpace").textContent = this.toString();
             await sleep(delay);
-            this.nextState();
+            this.fastNextState();
         }
     }
 }
