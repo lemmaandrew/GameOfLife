@@ -8,6 +8,3 @@ URL parameters:
 * `width`: The initial width of the game space
 * `density`: A value from 0 to 1 that indicates what percentage of the game space will be "alive" initially
 * `delay`: The delay in milliseconds between game states
-
-**TODO**
-* More accurately reflect the board size through updates (currently dimensions can only increase; we want them to be able to decrease too)

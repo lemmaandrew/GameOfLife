@@ -90,6 +90,11 @@ class Game {
      * Update the game board to the next state
      */
     fastNextState() {
+        /**
+         * Count the number of living neighors of a cell.
+         * @param {number} row
+         * @param {number} col
+         */
         const countNeighbors = (row, col) => {
             let neighborCount = 0;
             for (let i = row - 1; i <= row + 1; ++i) {
@@ -102,20 +107,38 @@ class Game {
             return neighborCount;
         }
 
-        const updateBoardBoundaries = (row, col) => {
-            if (row < this.minHeight) {
-                this.minHeight = row;
-            } else if (row == this.maxHeight) {
-                this.maxHeight = row + 1;
+        /**
+         * Update the current board boundaries given a row and column to check against
+         * @param {object} currentBoundaries The boundaries that have been seen so far
+         * @param {number} row The row to check against
+         * @param {number} col The column to check against
+         */
+        const updateBoardBoundaries = (currentBoundaries, row, col) => {
+            if (currentBoundaries.minHeight == null || row < currentBoundaries.minHeight) {
+                currentBoundaries.minHeight = row;
             }
-            if (col < this.minWidth) {
-                this.minWidth = col;
-            } else if (col == this.maxWidth) {
-                this.maxWitdh = col + 1;
+            if (currentBoundaries.maxHeight == null || row == currentBoundaries.maxHeight) {
+                currentBoundaries.maxHeight = row + 1;
+            }
+            if (currentBoundaries.minWidth == null || col < currentBoundaries.minWidth) {
+                currentBoundaries.minWidth = col;
+            }
+            if (currentBoundaries.maxWidth == null || col == currentBoundaries.maxWidth) {
+                currentBoundaries.maxWidth = col + 1;
             }
         }
 
-        const dfs = (row, col, visited, newBoard) => {
+        /**
+         * Create a new board through dfs.
+         * Basically we search for "islands" of alive cells, and only investigate them and their neighors.
+         * This avoids checking swaths of empty space to see if they should be alive
+         * @param {number} row The row of the current cell
+         * @param {number} col The column of the current cell
+         * @param {Set<string>} visited The cells already visited
+         * @param {Set<string>} newBoard The set of cells that will be alive in the next state
+         * @param {object} boundaries The coordinate boundaries of the board that have been measured so far
+         */
+        const dfs = (row, col, visited, newBoard, boundaries) => {
             if (visited.has(row + "," + col)) {
                 return;
             }
@@ -124,7 +147,7 @@ class Game {
             // because dead cells are only ever checked if they are the border of an "island" of alive cells
             if (!this.board.has(row + "," + col) && this.rules.shouldLive(false, countNeighbors(row, col))) {
                 newBoard.add(row + "," + col);
-                updateBoardBoundaries(row, col);
+                updateBoardBoundaries(boundaries, row, col);
                 return;
             }
             for (let i = row - 1; i <= row + 1; ++i) {
@@ -134,24 +157,35 @@ class Game {
                     let shouldLive = this.rules.shouldLive(isAlive, numNeighbors);
                     if (shouldLive) {
                         newBoard.add(i + "," + j);
-                        updateBoardBoundaries(i, j);
+                        updateBoardBoundaries(boundaries, i, j);
                         if (!(i == row && j == col)) {
-                            dfs(i, j, visited, newBoard);
+                            dfs(i, j, visited, newBoard, boundaries);
                         }
                     }
                 }
             }
         }
 
+        let boundaries = {
+            minHeight: null,
+            minWidth: null,
+            maxHeight: null,
+            maxWidth: null
+        };
         let visited = new Set();
         let newBoard = new Set();
         for (let loc of this.board) {
             const rowCol = loc.split(",");
             const row = +rowCol[0];
             const col = +rowCol[1];
-            dfs(row, col, visited, newBoard);
+            dfs(row, col, visited, newBoard, boundaries);
         }
         this.board = newBoard;
+        // the `|| 0` converts a `null` to a `0` just in case the boundary was never updated from null
+        this.minHeight = boundaries.minHeight || 0;
+        this.minWidth = boundaries.minWidth || 0;
+        this.maxHeight = boundaries.maxHeight || 0;
+        this.maxWidth = boundaries.maxWidth || 0;
     }
 
     async playGame(delay) {
