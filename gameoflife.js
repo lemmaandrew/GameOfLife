@@ -60,7 +60,7 @@ class Game {
      * @param {number|null} viewHeight If not null, limits the height of the visible board to from 0 to viewHeight
      * @param {number|null} viewWidth If not null, limits the width of the visible board to from 0 to viewWidth
      */
-    constructor(initHeight, initWidth, initDensity, rules = new GameRules(), viewHeight = null, viewWidth = null) {
+    constructor(initHeight, initWidth, initDensity, viewHeight = null, viewWidth = null, rules = new GameRules()) {
         this.rules = rules;
         this.board = new Set();
         // randomly filling in the board with alive and dead cells
@@ -86,10 +86,10 @@ class Game {
      * String representation of the board
      */
     toString() {
-        const viewMinHeight = this.viewHeight == null ? this.minHeight : this.viewHeight;
-        const viewMinWidth = this.viewWidth == null ? this.minWidth : this.viewWidth;
-        const viewMaxHeight = this.viewHeight == null ? this.maxHeight : this.viewHeight;
-        const viewMaxWidth = this.viewWidth == null ? this.maxWidth : this.viewWidth;
+        const viewMinHeight = this.viewHeight === null ? this.minHeight : 0;
+        const viewMinWidth = this.viewWidth === null ? this.minWidth : 0;
+        const viewMaxHeight = this.viewHeight === null ? this.maxHeight : this.viewHeight;
+        const viewMaxWidth = this.viewWidth === null ? this.maxWidth : this.viewWidth;
         let board = "";
         for (let i = viewMinHeight; i < viewMaxHeight; ++i) {
             for (let j = viewMinWidth; j < viewMaxWidth; ++j) {
@@ -230,7 +230,7 @@ function playFromParams() {
         viewWidth = +viewWidth;
     }
     window.addEventListener("load", () => {
-        g = new Game(initHeight, initWidth, initDensity, viewHeight = viewHeight, viewWidth = viewWidth);
+        g = new Game(initHeight, initWidth, initDensity, viewHeight, viewWidth);
         g.playGame(delay);
     });
 }
