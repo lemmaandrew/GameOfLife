@@ -53,7 +53,14 @@ class GameRules {
 }
 
 class Game {
-    constructor(initHeight, initWidth, initDensity, rules = new GameRules()) {
+    /**
+     * @param {number} initHeight The initial height of the board
+     * @param {number} initWidth The initial width of the board
+     * @param {GameRules} rules The game's rules
+     * @param {number|null} viewHeight If not null, limits the height of the visible board to from 0 to viewHeight
+     * @param {number|null} viewWidth If not null, limits the width of the visible board to from 0 to viewWidth
+     */
+    constructor(initHeight, initWidth, initDensity, rules = new GameRules(), viewHeight = null, viewWidth = null) {
         this.rules = rules;
         this.board = new Set();
         // randomly filling in the board with alive and dead cells
@@ -70,15 +77,22 @@ class Game {
         this.minWidth = 0;
         this.maxHeight = initHeight;
         this.maxWidth = initWidth;
+
+        this.viewHeight = viewHeight;
+        this.viewWidth = viewWidth;
     }
 
     /**
      * String representation of the board
      */
     toString() {
+        const viewMinHeight = this.viewHeight == null ? this.minHeight : this.viewHeight;
+        const viewMinWidth = this.viewWidth == null ? this.minWidth : this.viewWidth;
+        const viewMaxHeight = this.viewHeight == null ? this.maxHeight : this.viewHeight;
+        const viewMaxWidth = this.viewWidth == null ? this.maxWidth : this.viewWidth;
         let board = "";
-        for (let i = this.minHeight; i < this.maxHeight; ++i) {
-            for (let j = this.minWidth; j < this.maxWidth; ++j) {
+        for (let i = viewMinHeight; i < viewMaxHeight; ++i) {
+            for (let j = viewMinWidth; j < viewMaxWidth; ++j) {
                 board += this.board.has(i + "," + j) ? "X" : " ";
             }
             board += "\n";
@@ -207,8 +221,16 @@ function playFromParams() {
     const initWidth = urlParams.get("width") ? +urlParams.get("width") : 100;
     const initDensity = urlParams.get("density") ? +urlParams.get("density") : 0.5;
     const delay = urlParams.get("delay") ? +urlParams.get("delay") : 500;
+    let viewHeight = urlParams.get("viewHeight");
+    if (viewHeight !== null) {
+        viewHeight = +viewHeight;
+    }
+    let viewWidth = urlParams.get("viewWidth");
+    if (viewWidth !== null) {
+        viewWidth = +viewWidth;
+    }
     window.addEventListener("load", () => {
-        g = new Game(initHeight, initWidth, initDensity);
+        g = new Game(initHeight, initWidth, initDensity, viewHeight = viewHeight, viewWidth = viewWidth);
         g.playGame(delay);
     });
 }
