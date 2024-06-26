@@ -167,10 +167,10 @@ class Game {
         }
 
         let boundaries = {
-            minHeight: null,
-            minWidth: null,
-            maxHeight: null,
-            maxWidth: null
+            minHeight: this.minHeight,
+            minWidth: this.minWidth,
+            maxHeight: this.maxHeight,
+            maxWidth: this.maxWidth
         };
         let visited = new Set();
         let newBoard = new Set();
